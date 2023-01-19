@@ -1,0 +1,23 @@
+[
+  {
+    "model": "inventory.producttype",
+    "id": "1",
+    "fields": {
+      "name": "shoe"
+    }
+  },
+  {
+    "model": "inventory.producttype",
+    "id": "2",
+    "fields": {
+      "name": "phone"
+    }
+  },
+  {
+    "model": "inventory.producttype",
+    "id": "3",
+    "fields": {
+      "name": "laptop"
+    }
+  }
+]

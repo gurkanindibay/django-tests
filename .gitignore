@@ -1,0 +1,4 @@
+venv/*
+django-multi-tenant/tutorial/venv/*
+**/__pycache__/*
+

@@ -1,0 +1,18 @@
+[
+  {
+    "model": "inventory.productattribute",
+    "id": "1",
+    "fields": {
+      "name": "woman-shoe-size",
+      "description": "woman shoe size"
+    }
+  },
+  {
+    "model": "inventory.productattribute",
+    "id": "2",
+    "fields": {
+      "name": "color",
+      "description": "color"
+    }
+  }
+]
