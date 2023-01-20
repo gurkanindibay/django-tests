@@ -24,13 +24,6 @@ class Account(TenantModel):
     domain = models.CharField(max_length=255)
     subdomain = models.CharField(max_length=255)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    employee = models.ForeignKey(
-        "Employee",
-        on_delete=models.CASCADE,
-        related_name="accounts",
-        null=True,
-        blank=True,
-    )
 
     # TODO change to Meta
     tenant_id = "id"
@@ -39,26 +32,6 @@ class Account(TenantModel):
         return "{}".format(self.name)
 
 
-class Employee(models.Model):
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # Reference table
-    account = models.ForeignKey(
-        Account,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="employees",
-    )
-    created_by = models.ForeignKey(
-        "self",
-        blank=True,
-        null=True,
-        related_name="users_created",
-        on_delete=models.SET_NULL,
-    )
-
-    name = models.CharField(max_length=255)
 
 
 class ModelConfig(TenantModel):
@@ -66,15 +39,13 @@ class ModelConfig(TenantModel):
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="configs"
     )
-    employee = models.ForeignKey(
-        Employee,
-        on_delete=models.CASCADE,
-        related_name="configs",
-        null=True,
-        blank=True,
-    )
 
     tenant_id = "account_id"
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'account_id'], name='unique_modelconfig_account')
+        ]
 
 
 class Manager(TenantModel):
@@ -83,6 +54,10 @@ class Manager(TenantModel):
         Account, on_delete=models.CASCADE, related_name="managers"
     )
     tenant_id = "account_id"
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'account_id'], name='unique_manager_account')
+        ]
 
 
 class Project(TenantModel):
@@ -91,14 +66,13 @@ class Project(TenantModel):
         Account, related_name="projects", on_delete=models.CASCADE
     )
     managers = models.ManyToManyField(Manager, through="ProjectManager")
-    employee = models.ForeignKey(
-        Employee,
-        related_name="projects",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
     tenant_id = "account_id"
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'account_id'], name='unique_project_account')
+        ]
+
 
     def __str__(self):
         return "{} ({})".format(self.name, self.account)
@@ -112,6 +86,7 @@ class ProjectManager(TenantModel):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
 
     tenant_id = "account_id"
+
 
 
 class TaskQueryset(models.QuerySet):
@@ -134,17 +109,24 @@ class TaskManager(TenantManagerMixin, models.Manager):
 
 class Task(TenantModelMixin, models.Model):
     name = models.CharField(max_length=255)
-    project = TenantForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     opened = models.BooleanField(default=True)
 
-    parent = TenantForeignKey(
+    parent = models.ForeignKey(
         "self", on_delete=models.CASCADE, db_index=False, blank=True, null=True
     )
 
     objects = TaskManager()
 
     tenant_id = "account_id"
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'account_id'], name='unique_task_account')
+        ]
+
+
 
     def __str__(self):
         return "{} ({})".format(self.name, self.project)
@@ -160,6 +142,7 @@ class SubTask(TenantModel):
     tenant_id = "account_id"
 
 
+
 class UnscopedModel(models.Model):
     name = models.CharField(max_length=255)
 
@@ -171,15 +154,17 @@ class AliasedTask(TenantModel):
     tenant_id = "account_id"
 
 
+
 class Revenue(TenantModel):
     # To test for correct tenant_id push down in query
-    acc = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="revenues")
+    acc = models.ForeignKey(Account, on_delete=models.CASCADE)
     project = TenantForeignKey(
-        Project, on_delete=models.CASCADE, related_name="revenues"
+        Project, on_delete=models.CASCADE
     )
     value = models.CharField(max_length=30)
 
     tenant_id = "acc_id"
+
 
 
 # Models for UUID tests
@@ -189,10 +174,12 @@ class Organization(TenantModel):
     tenant_id = "id"
 
 
+
+
 class Record(TenantModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    organization = TenantForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
     tenant_id = "organization_id"
 
