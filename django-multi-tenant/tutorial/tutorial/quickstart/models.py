@@ -20,6 +20,7 @@ class Country(models.Model):
 
 
 class Account(TenantModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     domain = models.CharField(max_length=255)
     subdomain = models.CharField(max_length=255)

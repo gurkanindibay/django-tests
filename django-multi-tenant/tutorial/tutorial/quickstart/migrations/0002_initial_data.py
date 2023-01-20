@@ -5,6 +5,7 @@ from ..models import *
 
 from django.contrib.auth.models import User
 
+
 def forwards_func(apps, schema_editor):
 
     db_alias = schema_editor.connection.alias
@@ -16,87 +17,213 @@ def forwards_func(apps, schema_editor):
         ]
     )
 
-    anonymous_user = User.objects.create_user(username="anonymous")
-    anonymous_user.save()
-    
-    
-    Account.objects.using(db_alias).bulk_create(
-        [
-            Account(name="johndoe", domain="domain", subdomain="subdomain", country=Country.objects.get(name="USA")),
-            Account(name="jilldoe", domain="domain", subdomain="subdomain", country=Country.objects.get(name="USA")),
-            Account(name="milldoe", domain="domain", subdomain="subdomain", country=Country.objects.get(name="USA")),
-            Account(name="velidoe", domain="domain", subdomain="subdomain", country=Country.objects.get(name="Turkiye")),
-            Account(name="alidoe", domain="domain", subdomain="subdomain", country=Country.objects.get(name="Turkiye")),
-            Account(name="pierredoe", domain="domain", subdomain="subdomain", country=Country.objects.get(name="France")),
-        ]
+    user_tr = User.objects.create_user(
+        username="turkiye_user", email="turkiye@gmail.com", password="password"
     )
     
+    user_us= User.objects.create_user(
+        username="usa_user", email="us@gmail.com", password="password"
+    )
     
-    Manager.objects.using(db_alias).bulk_create([
-        Manager(name="John Doe", account=Account.objects.get(name="johndoe")),
-        Manager(name="Ali Doe", account=Account.objects.get(name="alidoe")),
-    ]) 
-    
-    
-    Project.objects.using(db_alias).bulk_create([
-        Project(name="Project US", account=Account.objects.get(name="johndoe")),
-        Project(name="Project TR", account=Account.objects.get(name="alidoe")),
-    ]) 
-    
+    user_fr= User.objects.create_user(
+        username="fr_user", email="fr@gmail.com", password="password"
+    )
 
-    
-    ProjectManager.objects.using(db_alias).bulk_create([
-        ProjectManager(project=Project.objects.get(name="Project US"), manager=Manager.objects.get(name="John Doe"), account=Account.objects.get(name="johndoe")),
-        ProjectManager( project=Project.objects.get(name="Project TR"), manager=Manager.objects.get(name="Ali Doe"),account=Account.objects.get(name="alidoe"))
-    ])
-    
+    Account.objects.using(db_alias).bulk_create(
+        [
+            Account(
+                user=user_us,
+                name="johndoe",
+                domain="domain",
+                subdomain="subdomain",
+                country=Country.objects.get(name="USA"),
+            ),
+            Account(
+                user=user_us,
+                name="jilldoe",
+                domain="domain",
+                subdomain="subdomain",
+                country=Country.objects.get(name="USA"),
+            ),
+            Account(
+                user=user_us,
+                name="milldoe",
+                domain="domain",
+                subdomain="subdomain",
+                country=Country.objects.get(name="USA"),
+            ),
+            Account(
+                user=user_tr,
+                name="velidoe",
+                domain="domain",
+                subdomain="subdomain",
+                country=Country.objects.get(name="Turkiye"),
+            ),
+            Account(
+                user=user_tr,
+                name="alidoe",
+                domain="domain",
+                subdomain="subdomain",
+                country=Country.objects.get(name="Turkiye"),
+            ),
+            Account(
+                user = user_fr,
+                name="pierredoe",
+                domain="domain",
+                subdomain="subdomain",
+                country=Country.objects.get(name="France"),
+            ),
+        ]
+    )
 
-    Task.objects.create(name="Parent Task", project=Project.objects.get(name="Project US"), account=Account.objects.get(name="johndoe"))
-       
-    Task.objects.using(db_alias).bulk_create([
-        Task(name="Task 1", project=Project.objects.get(name="Project US"), account=Account.objects.get(name="johndoe"), parent=Task.objects.get(name="Parent Task")),
-        Task(name="Task 2", project=Project.objects.get(name="Project TR"), account=Account.objects.get(name="alidoe"), parent=Task.objects.get(name="Parent Task")),
-    ])
-    
-    
-    SubTask.objects.using(db_alias).bulk_create([
-        SubTask(name="SubTask 1", task=Task.objects.get(name="Task 1"), type="issue", project=Project.objects.get(name="Project US"), account=Account.objects.get(name="johndoe")),
-        SubTask(name="SubTask 2", task=Task.objects.get(name="Task 2"), type="issue", project=Project.objects.get(name="Project TR"), account=Account.objects.get(name="alidoe")),
-        SubTask(name="SubTask 3", task=Task.objects.get(name="Task 1"), type="issue", project=Project.objects.get(name="Project US"), account=Account.objects.get(name="johndoe")),
-    ])
-    
+    Manager.objects.using(db_alias).bulk_create(
+        [
+            Manager(name="John Doe", account=Account.objects.get(name="johndoe")),
+            Manager(name="Ali Doe", account=Account.objects.get(name="alidoe")),
+        ]
+    )
 
-    Revenue.objects.using(db_alias).bulk_create([
-        Revenue(acc=Account.objects.get(name="johndoe"), project=Project.objects.get(name="Project US"), value=2000),
-        Revenue(acc=Account.objects.get(name="alidoe"), project=Project.objects.get(name="Project TR"), value=500),
-    ])
-    
+    Project.objects.using(db_alias).bulk_create(
+        [
+            Project(name="Project US", account=Account.objects.get(name="johndoe")),
+            Project(name="Project TR", account=Account.objects.get(name="alidoe")),
+        ]
+    )
 
-    
-    Organization.objects.using(db_alias).bulk_create([
-        Organization(name="Organization 1"),
-        Organization(name="Organization 2"),
-    ])
-    
-    
-    Record.objects.using(db_alias).bulk_create([
-        Record(name="Record 1", organization=Organization.objects.get(name="Organization 1")),
-        Record(name="Record 2", organization=Organization.objects.get(name="Organization 2")),
-        Record(name="Record 3", organization=Organization.objects.get(name="Organization 1")),
-        Record(name="Record 4", organization=Organization.objects.get(name="Organization 2")),
-        Record(name="Record 5", organization=Organization.objects.get(name="Organization 1")),
-    ])
-    
-    TenantNotIdModel.objects.using(db_alias).bulk_create([
-        TenantNotIdModel(tenant_column=1, name="TenantNotIdModel 1"),
-        TenantNotIdModel(tenant_column=2, name="TenantNotIdModel 2"),
-    ])
-    
-    SomeRelatedModel.objects.using(db_alias).bulk_create([
-        SomeRelatedModel(name="SomeRelatedModel 1", related_tenant=TenantNotIdModel.objects.get(name="TenantNotIdModel 1")),
-        SomeRelatedModel(name="SomeRelatedModel 2", related_tenant=TenantNotIdModel.objects.get(name="TenantNotIdModel 2")),
-        SomeRelatedModel(name="SomeRelatedModel 3", related_tenant=TenantNotIdModel.objects.get(name="TenantNotIdModel 1"))
-    ])
+    ProjectManager.objects.using(db_alias).bulk_create(
+        [
+            ProjectManager(
+                project=Project.objects.get(name="Project US"),
+                manager=Manager.objects.get(name="John Doe"),
+                account=Account.objects.get(name="johndoe"),
+            ),
+            ProjectManager(
+                project=Project.objects.get(name="Project TR"),
+                manager=Manager.objects.get(name="Ali Doe"),
+                account=Account.objects.get(name="alidoe"),
+            ),
+        ]
+    )
+
+    Task.objects.create(
+        name="Parent Task",
+        project=Project.objects.get(name="Project US"),
+        account=Account.objects.get(name="johndoe"),
+    )
+
+    Task.objects.using(db_alias).bulk_create(
+        [
+            Task(
+                name="Task 1",
+                project=Project.objects.get(name="Project US"),
+                account=Account.objects.get(name="johndoe"),
+                parent=Task.objects.get(name="Parent Task"),
+            ),
+            Task(
+                name="Task 2",
+                project=Project.objects.get(name="Project TR"),
+                account=Account.objects.get(name="alidoe"),
+                parent=Task.objects.get(name="Parent Task"),
+            ),
+        ]
+    )
+
+    SubTask.objects.using(db_alias).bulk_create(
+        [
+            SubTask(
+                name="SubTask 1",
+                task=Task.objects.get(name="Task 1"),
+                type="issue",
+                project=Project.objects.get(name="Project US"),
+                account=Account.objects.get(name="johndoe"),
+            ),
+            SubTask(
+                name="SubTask 2",
+                task=Task.objects.get(name="Task 2"),
+                type="issue",
+                project=Project.objects.get(name="Project TR"),
+                account=Account.objects.get(name="alidoe"),
+            ),
+            SubTask(
+                name="SubTask 3",
+                task=Task.objects.get(name="Task 1"),
+                type="issue",
+                project=Project.objects.get(name="Project US"),
+                account=Account.objects.get(name="johndoe"),
+            ),
+        ]
+    )
+
+    Revenue.objects.using(db_alias).bulk_create(
+        [
+            Revenue(
+                acc=Account.objects.get(name="johndoe"),
+                project=Project.objects.get(name="Project US"),
+                value=2000,
+            ),
+            Revenue(
+                acc=Account.objects.get(name="alidoe"),
+                project=Project.objects.get(name="Project TR"),
+                value=500,
+            ),
+        ]
+    )
+
+    Organization.objects.using(db_alias).bulk_create(
+        [
+            Organization(name="Organization 1"),
+            Organization(name="Organization 2"),
+        ]
+    )
+
+    Record.objects.using(db_alias).bulk_create(
+        [
+            Record(
+                name="Record 1",
+                organization=Organization.objects.get(name="Organization 1"),
+            ),
+            Record(
+                name="Record 2",
+                organization=Organization.objects.get(name="Organization 2"),
+            ),
+            Record(
+                name="Record 3",
+                organization=Organization.objects.get(name="Organization 1"),
+            ),
+            Record(
+                name="Record 4",
+                organization=Organization.objects.get(name="Organization 2"),
+            ),
+            Record(
+                name="Record 5",
+                organization=Organization.objects.get(name="Organization 1"),
+            ),
+        ]
+    )
+
+    TenantNotIdModel.objects.using(db_alias).bulk_create(
+        [
+            TenantNotIdModel(tenant_column=1, name="TenantNotIdModel 1"),
+            TenantNotIdModel(tenant_column=2, name="TenantNotIdModel 2"),
+        ]
+    )
+
+    SomeRelatedModel.objects.using(db_alias).bulk_create(
+        [
+            SomeRelatedModel(
+                name="SomeRelatedModel 1",
+                related_tenant=TenantNotIdModel.objects.get(name="TenantNotIdModel 1"),
+            ),
+            SomeRelatedModel(
+                name="SomeRelatedModel 2",
+                related_tenant=TenantNotIdModel.objects.get(name="TenantNotIdModel 2"),
+            ),
+            SomeRelatedModel(
+                name="SomeRelatedModel 3",
+                related_tenant=TenantNotIdModel.objects.get(name="TenantNotIdModel 1"),
+            ),
+        ]
+    )
 
 
 def reverse_func(apps, schema_editor):

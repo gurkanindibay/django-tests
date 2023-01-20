@@ -2,3 +2,5 @@ venv/*
 django-multi-tenant/tutorial/venv/*
 **/__pycache__/*
 
+django-multi-tenant/tutorial/tutorial/quickstart/__pycache__/serializers.cpython-39.pyc
+django-multi-tenant/tutorial/tutorial/quickstart/__pycache__/views.cpython-39.pyc
