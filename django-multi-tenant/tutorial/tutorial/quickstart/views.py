@@ -1,19 +1,33 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
-from tutorial.quickstart.serializers import UserSerializer, GroupSerializer,AccountSerializer
-from .models import Account
-from django_multitenant.utils import get_current_tenant
+from tutorial.quickstart.serializers import (
+    UserSerializer,
+    GroupSerializer,
+    AccountSerializer,
+    ProjectSerializer,
+)
+from .models import Account, Project
+from django_multitenant.utils import get_current_tenant, set_current_tenant
 from django_multitenant.models import TenantModel
 from typing import Dict, Generic, TypeVar
 
+from abc import ABC, abstractmethod
+from .base_view import TenantModelViewSet
+
+from tutorial.quickstart.base_view import TenantModelViewSet
+import tutorial.quickstart.base_view
+
 T = TypeVar("T")
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
+
     print("UserViewSet executed")
-    queryset = User.objects.all().order_by('-date_joined')
+    queryset = User.objects.all().order_by("-date_joined")
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -22,41 +36,55 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
-    
+
     print("GroupViewSet executed")
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class TenantModelViewSet(viewsets.ModelViewSet):
-    model_class = TenantModel
-    def get_queryset(self):
-        return self.model_class.objects.all()
+def tenant_func(request):
+    return Account.objects.filter(user=request.user).first()
+
+
+tutorial.quickstart.base_view.get_tenant = tenant_func
+
 class AccountViewSet(TenantModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
+
     model_class = Account
     serializer_class = AccountSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
-    
+class ProjectViewSet(TenantModelViewSet):
+    """
+    API endpoint that allows groups to be viewed or edited.
+    """
+
+    model_class = Project
+    serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 
-@api_view(['GET', 'POST'])
+@api_view(["GET", "POST"])
 def account_list(request):
     """
     List all Accounts, or create a new account.
     """
-    if request.method == 'GET':
+    if request.method == "GET":
         accounts = Account.objects.all()
         serializer = AccountSerializer(accounts, many=True)
         return Response(serializer.data)
 
-    elif request.method == 'POST':
+    elif request.method == "POST":
         serializer = AccountSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

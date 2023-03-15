@@ -206,3 +206,54 @@ class MigrationTestModel(TenantModel):
 
 class MigrationTestReferenceModel(models.Model):
     name = models.CharField(max_length=255)
+
+
+# class Company(TenantModel):
+#     tenant_id = "id"
+#     name = models.CharField( max_length=100)
+#     def __str__(self):
+#         return "{}".format(self.name)
+
+
+# class Business(TenantModel):
+#     name = models.CharField(max_length=255)
+#     company = models.ForeignKey(
+#         Company, related_name="companies", on_delete=models.CASCADE
+#     )
+#     tenant_id = "company_id"
+    
+#     class Meta:
+#         constraints = [
+#             models.UniqueConstraint(fields=['id', 'company_id'], name='unique_business_company')
+#         ]
+
+# class Template(TenantModel):
+    
+#     company = models.ForeignKey(Company,  on_delete=models.CASCADE)
+#     business = TenantForeignKey(Business,  on_delete=models.CASCADE)
+#     name = models.CharField("name", max_length=100)
+#     created_by = models.CharField("created_by", max_length=100)
+#     tenant_id = "company_id"
+
+class Tenant(TenantModel):
+    tenant_id = "id"
+    name = models.CharField("tenant name", max_length=100)
+
+class Business(TenantModel):
+    ten = models.ForeignKey(Tenant, blank=True, null=True, on_delete=models.SET_NULL)
+    tenant_id = "ten_id"
+    bk_biz_id = models.IntegerField("business ID")
+    bk_biz_name = models.CharField("business name", max_length=100)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'ten_id'], name='unique_business_ten')
+        ]
+
+
+class Template(TenantModel):
+    tenant_id = "ten_id"
+    ten = models.ForeignKey(Tenant, blank=True, null=True, on_delete=models.SET_NULL)
+    business = TenantForeignKey(Business, blank=True, null=True, on_delete=models.SET_NULL)
+    name = models.CharField("name", max_length=100)
+    created_by = models.CharField("created by", max_length=100)

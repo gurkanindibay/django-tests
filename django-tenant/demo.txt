@@ -1,0 +1,8 @@
+python manage.py migrate
+python manage.py create_tenant (demo)
+python manage.py createsuperuser (admin)
+python manage.py create_tenant_superuser (demo)
+python manage.py runserver
+
+python manage.py create_tenant (demo2)
+python manage.py create_tenant_superuser (demo2)
